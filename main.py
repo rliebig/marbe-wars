@@ -384,10 +384,17 @@ class MiniGame:
                                       end_x,
                                       end_y,
                                       color=self.marble_color)
+        fourth_marble = MiniGameMarble(start_x,
+                                      start_y,
+                                      end_x,
+                                      end_y,
+                                      color=self.marble_color)
         first_marble.move_x += 0.01 # Lets get the party STARTED
         second_marble.move_x += 0.1
+        fourth_marble.move_x += 0.1
         self.marbles.append(first_marble)
         self.marbles.append(second_marble)
+        self.marbles.append(fourth_marble)
         #self.marbles.append(second_marble)
 
     def update(self):
@@ -439,6 +446,35 @@ class MiniGame:
                     marble.move_y = vYNew * 0.9
                 else:
                     obstacle.color = (129, 129, 129)
+            # Marble - Marble Collision
+            for marble in self.marbles:
+                for enemy_marble in [i for i in self.marbles if i != marble]:
+                    max_dist = (marble.x - enemy_marble.x) ** 2 + (marble.y - enemy_marble.y) ** 2
+                    if max_dist < (marble.radius + enemy_marble.radius) ** 2:
+                        angle = math.atan2(marble.y - enemy_marble.y, marble.x - enemy_marble.x)
+                        cosa = math.cos(angle)
+                        sina = math.sin(angle)
+                        overlap = marble.radius + (enemy_marble.radius + 1) - math.sqrt(max_dist)
+
+                        overlapX = overlap * cosa
+                        overlapY = overlap * sina
+
+                        marble.x = marble.x + overlapX
+                        marble.y = marble.y + overlapY
+
+                        px1 = cosa * marble.move_x - sina * marble.move_y
+                        py1 = sina * marble.move_x + cosa * marble.move_y
+
+                        px2 = cosa * enemy_marble.move_x - sina * enemy_marble.move_y
+                        py2 = sina * enemy_marble.move_x + cosa * enemy_marble.move_y
+
+                        vXNew = (px1 + px2) / 2
+                        vYNew = (py1 + py2) / 2
+
+                        marble.move_x = vXNew * 0.9
+                        marble.move_y = vYNew * 0.9
+                        enemy_marble.move_x = vXNew * 0.9
+                        enemy_marble.move_y = vYNew * 0.9
 
     def draw(self):
         global SCREEN
@@ -507,9 +543,13 @@ class Bullet:
         #for i in range(0, 10):
         #    last_x -= math.cos(self.angle) * self.speed_x
         #    last_y -= math.sin(self.angle) * self.speed_y
-        
+
+        # I hate this loop with every fiber of my being 
+        i = 0
         for x, y in zip(self.last_x, self.last_y):
-            draw_circle_alpha(self.color, (int(z), int(y)), 6, 110 - i * 10)
+            draw_circle_alpha(self.color, (int(x), int(y)), 6, 30 + i * 10)
+            i += 1
+
 
         pygame.draw.circle(SCREEN, self.color, (int(self.x), int(self.y)), self.radius)        
         pygame.draw.circle(SCREEN, (0,0,0), (int(self.x), int(self.y)), self.radius, width=1)       
@@ -517,7 +557,9 @@ class Bullet:
     def update(self):
         self.last_x += [self.x]
         self.last_y += [self.y]
-        #if len(last_x) 
+        if len(self.last_x) > 8:
+            self.last_x.pop(0) 
+            self.last_y.pop(0)
         self.x += math.cos(self.angle) * self.speed_x
         self.y += math.sin(self.angle) * self.speed_y
 
@@ -660,12 +702,14 @@ def main():
 #active_bullets.remove(bullet)
             if not hit:
                 bullet.update()
-                bullet.draw()
             else:
                 active_bullets.remove(bullet)
             
 
         myGrid.draw(rot)
+        for bullet in active_bullets:
+            bullet.draw()
+        
 
 
         pygame.display.update()
