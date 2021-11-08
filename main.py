@@ -28,6 +28,8 @@ def is_in_square(x, y, x1, y1, x2, y2):
     else:
         return False
 
+def angle_to_circle_coordinate(angle):
+    return math.sin(angle), math.cos(angle)
 
 # you would assume that rotating squares is a trivial task...
 def rectRotated(surface,
@@ -223,10 +225,52 @@ class Grid:
                            self.block_size)
         rectRotated(SCREEN, 
                     (255, 0, 0), 
-                    (self.offset_x + (self.block_size ), self.offset_y + (self.block_size // 2), self.block_size*3, self.block_size),
+                    (self.offset_x + (self.block_size ),
+                     self.offset_y + (self.block_size // 2), 
+                     self.block_size*3, 
+                     self.block_size),
                     0,
                     0, 
                     rot)
+        pygame.draw.circle(SCREEN,
+                           (4,4,255),
+                           (self.offset_x + (self.blocks-1) * self.block_size,
+                           self.offset_y + (self.blocks-1) * self.block_size),
+                           self.block_size)
+        rectRotated(SCREEN, 
+                    (255, 255, 4), 
+                    (self.offset_x + (self.block_size)*(self.blocks-1), 
+                     self.offset_y + (self.block_size // 2), 
+                     self.block_size*3, self.block_size),
+                    0,
+                    0, 
+                    270+rot)
+        pygame.draw.circle(SCREEN,
+                           (255,255,4),
+                           (self.offset_x + (self.blocks-1) * self.block_size,
+                           self.offset_y +  self.block_size),
+                           self.block_size)
+        rectRotated(SCREEN, 
+                    (4, 4, 255), 
+                    (self.offset_x + (self.block_size)*(self.blocks-1), 
+                     self.offset_y + (self.block_size)*(self.blocks-1)-(self.block_size//2),
+                     self.block_size*3, self.block_size),
+                    0,
+                    0, 
+                    180+rot)
+        pygame.draw.circle(SCREEN,
+                           (4,255,4),
+                           (self.offset_x +  self.block_size,
+                           self.offset_y +  (self.blocks-1) * self.block_size),
+                           self.block_size)
+        rectRotated(SCREEN, 
+                    (4, 255, 4), 
+                    (self.offset_x + (self.block_size), 
+                     self.offset_y + (self.block_size)*(self.blocks-1)-(self.block_size//2),
+                     self.block_size*3, self.block_size),
+                    0,
+                    0, 
+                    90+rot)
         
 
 class MiniGameObstacle:
@@ -240,7 +284,7 @@ class MiniGameObstacle:
         self.start_y = start_y
         self.end_y = end_y
         self.move_x = 0
-        self.move_y = -0.2
+        self.move_y = -0.4
 
     def draw(self):
         pygame.draw.circle(SCREEN, 
@@ -271,7 +315,7 @@ class MiniGameMarble:
         print("Marble initiated: {}", start_x)
         self.color = color
 
-        self.x = int(start_x + (end_x - start_x)/2)
+        self.x = start_x
         self.y = start_y
 
         # this introduces velocity into the system
@@ -301,18 +345,20 @@ class MiniGameMarble:
                 print("self.x{} self.start_x{} self.end_x{} thirds: {} MULTIPLY".format(self.x, self.start_x, self.end_x, thirds))
                 self.lastscore = 2
             self.x = random.randrange(self.start_x, self.end_x)
+        
+
         # Left border bounce off
-        if self.x-6 < self.start_x and self.move_x < 0:
-            self.move_x = -self.move_x + 1
-            self.x = self.start_x
+        if self.x-12 < self.start_x and self.move_x < 0:
+            self.move_x = -self.move_x #+ 1
+            self.x = self.start_x+12
         # Right border bounce off
-        if self.x+6 > self.end_x and self.move_x > 0:
-            self.move_x = -self.move_x + 1
-            self.x = self.end_x
+        if self.x+12 > self.end_x and self.move_x > 0:
+            self.move_x = -self.move_x #+ 1
+            self.x = self.end_x-12
         # top border bounce off 
-        if self.y < self.start_y and self.move_y > 0:
-            self.move_y = -self.move_y + 1
-            self.y = self.start_y
+        #if self.y < self.start_y and self.move_y > 0:
+        #    self.move_y = 1
+        #    self.y = self.start_y
 
 
     def draw(self):
@@ -341,7 +387,7 @@ class MiniGame:
                     additional_factor = 30
 
                 # Someone told me this needs refactoring...
-                new_obstacle = MiniGameObstacle(x=self.start_x + 20 + k * 55, 
+                new_obstacle = MiniGameObstacle(x=self.start_x + k * 55, 
                                                 y=self.start_y + 30 + i * 90 + additional_factor,
                                                 start_y=self.start_y,
                                                 end_y=self.end_y,
@@ -390,7 +436,7 @@ class MiniGame:
                                       end_y,
                                       color=self.marble_color)
         first_marble.move_x += 0.01 # Lets get the party STARTED
-        second_marble.move_x += 0.1
+        second_marble.move_x -= 0.01
         fourth_marble.move_x += 0.1
         self.marbles.append(first_marble)
         self.marbles.append(second_marble)
@@ -401,7 +447,6 @@ class MiniGame:
         for obstacle in self.obstacles:
             obstacle.update()
         for marble in self.marbles:
-            marble.update()
             # collect results
             if marble.lastscore == 1:
                 #self.additional_text = "RELEASE"
@@ -475,6 +520,8 @@ class MiniGame:
                         marble.move_y = vYNew * 0.9
                         enemy_marble.move_x = vXNew * 0.9
                         enemy_marble.move_y = vYNew * 0.9
+            for marble in self.marbles:
+                marble.update()
 
     def draw(self):
         global SCREEN
@@ -571,9 +618,12 @@ def main():
     SCREEN = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     CLOCK = pygame.time.Clock()
 
-    myGrid = Grid(GRID_OFFSET, GRID_TOP_OFFSET, (WINDOW_WIDTH-2*GRID_OFFSET), 50)
-    rot_speed = 1
+    bullets_to_release = [0,0,0,0,0]
+    myGrid = Grid(GRID_OFFSET, GRID_TOP_OFFSET, (WINDOW_WIDTH-2*GRID_OFFSET), 80)
+    rot_speed = 2
     rot = 270
+    inverse_rot = 360
+    inverse_rot_speed = -2
     active_bullets = []
     minigames = []
     myMinigame = MiniGame(0,
@@ -606,13 +656,83 @@ def main():
                 if event.key == K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+                if event.key == K_w:
+                    if rot > 345:
+                        my_rot = 345
+                    elif rot < 295:
+                        my_rot = 295
+                    else:
+                        my_rot = rot
+                    circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot+90))
+                    current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+                    current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+                    current_x += myGrid.offset_x + myGrid.block_size
+                    current_y += myGrid.offset_y + myGrid.block_size
+                    active_bullets.append(Bullet(current_x,
+                                                current_y,
+                                                90+inverse_rot, 
+                                                8,
+                                                team=1))
+                if event.key == K_s: 
+                    if rot > 345:
+                        my_rot = 345
+                    elif rot < 295:
+                        my_rot = 295
+                    else:
+                        my_rot = rot
+                    circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot-180))
+                    current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+                    current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+                    current_x += myGrid.offset_x + myGrid.block_size
+                    current_y += myGrid.offset_y + myGrid.block_size*(myGrid.blocks-1)
+                    print("left to release {}".format(bullets_to_release[1]))
+                    print("rot {}".format(rot))
+                    print("current_x {}".format(current_x))
+                    print("current_y {}".format(current_y))
+                    active_bullets.append(Bullet(current_x,
+                                                current_y, 
+                                                inverse_rot, 
+                                                8,
+                                                team=2))
+                if event.key == K_a:
+                    my_rot = rot
+                    circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot-90))
+                    current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+                    current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+                    current_x += myGrid.offset_x + myGrid.block_size*(myGrid.blocks-1)
+                    current_y += myGrid.offset_y + myGrid.block_size*(myGrid.blocks-1)
+                    active_bullets.append(Bullet(current_x,
+                                                current_y, 
+                                                inverse_rot-90, 
+                                                8,
+                                                team=3))
+                if event.key == K_d:
+                    my_rot = rot
+                    circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot))
+                    current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+                    current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+                    current_x += myGrid.offset_x + myGrid.block_size*(myGrid.blocks-1)
+                    current_y += myGrid.offset_y + myGrid.block_size
+                    active_bullets.append(Bullet(current_x,
+                                                current_y, 
+                                                inverse_rot+180, 
+                                                8,
+                                                team=4))
 
 
+
+
+        total_rot_speed = 2
         rot = (rot + rot_speed)  % 361
         if rot == 360:
-            rot_speed = -1
+            rot_speed = -total_rot_speed
         elif rot == 270:
-            rot_speed = 1
+            rot_speed = total_rot_speed
+        inverse_rot = (inverse_rot + inverse_rot_speed)  % 361
+        if inverse_rot == 360:
+            inverse_rot_speed = -total_rot_speed
+        elif inverse_rot == 270:
+            inverse_rot_speed = total_rot_speed
         #point = pygame.mouse.get_pos()
         #for i in [0,1,-1]:
         #    for y in [0,1,-1]:
@@ -633,39 +753,68 @@ def main():
         pygame.draw.rect(SCREEN, (90, 90, 90), (0, 0, GRID_OFFSET, WINDOW_HEIGHT))
         pygame.draw.rect(SCREEN, (90, 90, 90), (0, WINDOW_HEIGHT - GRID_TOP_OFFSET, WINDOW_WIDTH, GRID_TOP_OFFSET))
         # Draw Marble mini games
+        # BURGGGH
+
         for i, minigame in enumerate(minigames):
             if minigame.collect_score != 0:
                 temp_store = minigame.collect_score
+                bullets_to_release[minigame.team] += minigame.collect_score
                 minigame.collect_score = 0
-                print("rushing {} marbles for team {}".format(temp_store, i+1) )
-                if minigame.team == 1:
-                    for i in range(temp_store):
-                        active_bullets.append(Bullet(myGrid.offset_x + myGrid.block_size,
-                                                    myGrid.offset_y + myGrid.block_size, 
-                                                    random.randrange(0-9,90+9), 
-                                                    8,
-                                                    team=1))
-                if minigame.team == 2:
-                    for i in range(temp_store):
-                        active_bullets.append(Bullet(myGrid.offset_x + myGrid.block_size,
-                                                    myGrid.offset_y + myGrid.block_size*(myGrid.blocks-1), 
-                                                    random.randrange(270-9,360+9), 
-                                                    8,
-                                                    team=2))
-                if minigame.team == 3:
-                    for i in range(temp_store):
-                        active_bullets.append(Bullet(myGrid.offset_x + myGrid.block_size*(myGrid.blocks-1),
-                                                    myGrid.offset_y + myGrid.block_size*(myGrid.blocks-1), 
-                                                    random.randrange(180-9,270+9), 
-                                                    8,
-                                                    team=3))
-                if minigame.team == 4:
-                    for i in range(temp_store):
-                        active_bullets.append(Bullet(myGrid.offset_x + myGrid.block_size*(myGrid.blocks-1),
-                                                    myGrid.offset_y + myGrid.block_size*1, 
-                                                    random.randrange(90-9,180+9), 
-                                                    8,
-                                                    team=4))
+                # I cannot count all the antipatterns which are probably present
+                # in the code below
+
+        if bullets_to_release[1] != 0:
+            bullets_to_release[1] -= 1
+            my_rot = rot
+            circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot-270))
+            current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+            current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+            current_x += myGrid.offset_x + myGrid.block_size
+            current_y += myGrid.offset_y + myGrid.block_size
+            active_bullets.append(Bullet(current_x,
+                                        current_y,
+                                        inverse_rot+90, 
+                                        8,
+                                        team=1))
+        if bullets_to_release[2] != 0:
+            bullets_to_release[2] -= 1
+            my_rot = rot
+            circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot-180))
+            current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+            current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+            current_x += myGrid.offset_x + myGrid.block_size
+            current_y += myGrid.offset_y + myGrid.block_size*(myGrid.blocks-1)
+            active_bullets.append(Bullet(current_x,
+                                        current_y, 
+                                        inverse_rot, 
+                                        8,
+                                        team=2))
+        if bullets_to_release[3] != 0:
+            bullets_to_release[3] -= 1
+            my_rot = rot
+            circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot-90))
+            current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+            current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+            current_x += myGrid.offset_x + myGrid.block_size*(myGrid.blocks-1)
+            current_y += myGrid.offset_y + myGrid.block_size*(myGrid.blocks-1)
+            active_bullets.append(Bullet(current_x,
+                                        current_y, 
+                                        inverse_rot-90, 
+                                        8,
+                                        team=3))
+        if bullets_to_release[4] != 0:
+            bullets_to_release[4] -= 1
+            my_rot = rot
+            circle_coordinates = angle_to_circle_coordinate(math.radians(my_rot))
+            current_x = circle_coordinates[0] * myGrid.block_size * 3.5
+            current_y = circle_coordinates[1] * myGrid.block_size * 3.5
+            current_x += myGrid.offset_x + myGrid.block_size*(myGrid.blocks-1)
+            current_y += myGrid.offset_y + myGrid.block_size
+            active_bullets.append(Bullet(current_x,
+                                        current_y, 
+                                        inverse_rot+180, 
+                                        8,
+                                        team=4))
 
 
         for minigame in minigames:
@@ -709,8 +858,13 @@ def main():
         myGrid.draw(rot)
         for bullet in active_bullets:
             bullet.draw()
-        
 
+        # artifically limit rotation angles
+        #pygame.draw.circle(SCREEN,
+        #                   (255,255,255),
+        #                   (current_x,
+        #                   current_y),
+        #                   2)
 
         pygame.display.update()
         CLOCK.tick(30)
