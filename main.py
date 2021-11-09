@@ -216,68 +216,82 @@ class Grid:
             return
         self.grid_array[x + y * self.blocks] = value
 
+    top_left_gun_alive = True
     def draw_top_left_gun(self, rot):
-        pygame.draw.circle(SCREEN,
-                           (255,4,4),
-                           (self.offset_x + self.block_size,
-                           self.offset_y + self.block_size),
-                           self.block_size)
-        rectRotated(SCREEN, 
-                    (255, 0, 0), 
-                    (self.offset_x + (self.block_size ),
-                     self.offset_y + (self.block_size // 2), 
-                     self.block_size*3, 
-                     self.block_size),
-                    0,
-                    0, 
-                    rot)
+        if self.top_left_gun_alive:
+            pygame.draw.circle(SCREEN,
+                            (255,4,4),
+                            (self.offset_x + self.block_size,
+                            self.offset_y + self.block_size),
+                            self.block_size)
+            rectRotated(SCREEN, 
+                        (255, 0, 0), 
+                        (self.offset_x + (self.block_size ),
+                        self.offset_y + (self.block_size // 2), 
+                        self.block_size*3, 
+                        self.block_size),
+                        0,
+                        0, 
+                        rot)
 
+    top_right_gun_alive = True
     def draw_top_right_gun(self, rot): 
-        pygame.draw.circle(SCREEN,
-                           (4,4,255),
-                           (self.offset_x + (self.blocks-1) * self.block_size,
-                           self.offset_y + (self.blocks-1) * self.block_size),
-                           self.block_size)
-        rectRotated(SCREEN, 
-                    (255, 255, 4), 
-                    (self.offset_x + (self.block_size)*(self.blocks-1), 
-                     self.offset_y + (self.block_size // 2), 
-                     self.block_size*3, self.block_size),
-                    0,
-                    0, 
-                    270+rot)
+        if self.top_right_gun_alive:
+            pygame.draw.circle(SCREEN,
+                            (255,255,4),
+                            (self.offset_x + (self.blocks-1) * self.block_size,
+                            self.offset_y +  self.block_size),
+                            self.block_size)
+            rectRotated(SCREEN, 
+                        (255, 255, 4), 
+                        (self.offset_x + (self.block_size)*(self.blocks-1), 
+                        self.offset_y + (self.block_size // 2), 
+                        self.block_size*3, self.block_size),
+                        0,
+                        0, 
+                        270+rot)
+
+    bottom_left_gun_alive = True 
+    def draw_bottom_left_gun(self, rot):
+        if self.bottom_left_gun_alive:
+            pygame.draw.circle(SCREEN,
+                            (4,255,4),
+                            (self.offset_x +  self.block_size,
+                            self.offset_y +  (self.blocks-1) * self.block_size),
+                            self.block_size)
+            rectRotated(SCREEN, 
+                        (4, 255, 4), 
+                        (self.offset_x + (self.block_size), 
+                        self.offset_y + (self.block_size)*(self.blocks-1)-(self.block_size//2),
+                        self.block_size*3, self.block_size),
+                        0,
+                        0, 
+                        90+rot)
+
+    bottom_right_gun_alive = True
+    def draw_bottom_right_gun(self, rot):
+        if self.bottom_right_gun_alive:
+            rectRotated(SCREEN, 
+                        (4, 4, 255), 
+                        (self.offset_x + (self.block_size)*(self.blocks-1), 
+                        self.offset_y + (self.block_size)*(self.blocks-1)-(self.block_size//2),
+                        self.block_size*3, self.block_size),
+                        0,
+                        0, 
+                        180+rot)
+            pygame.draw.circle(SCREEN,
+                            (4,4,255),
+                            (self.offset_x + (self.blocks-1) * self.block_size,
+                            self.offset_y + (self.blocks-1) * self.block_size),
+                            self.block_size)
 
     def draw(self, rot):
         self.draw_grid()
         self.draw_lines()
         self.draw_top_right_gun(rot)
         self.draw_top_left_gun(rot)
-        pygame.draw.circle(SCREEN,
-                           (255,255,4),
-                           (self.offset_x + (self.blocks-1) * self.block_size,
-                           self.offset_y +  self.block_size),
-                           self.block_size)
-        rectRotated(SCREEN, 
-                    (4, 4, 255), 
-                    (self.offset_x + (self.block_size)*(self.blocks-1), 
-                     self.offset_y + (self.block_size)*(self.blocks-1)-(self.block_size//2),
-                     self.block_size*3, self.block_size),
-                    0,
-                    0, 
-                    180+rot)
-        pygame.draw.circle(SCREEN,
-                           (4,255,4),
-                           (self.offset_x +  self.block_size,
-                           self.offset_y +  (self.blocks-1) * self.block_size),
-                           self.block_size)
-        rectRotated(SCREEN, 
-                    (4, 255, 4), 
-                    (self.offset_x + (self.block_size), 
-                     self.offset_y + (self.block_size)*(self.blocks-1)-(self.block_size//2),
-                     self.block_size*3, self.block_size),
-                    0,
-                    0, 
-                    90+rot)
+        self.draw_bottom_right_gun(rot)
+        self.draw_bottom_left_gun(rot)
         
 
 class MiniGameObstacle:
@@ -853,6 +867,15 @@ def main():
             for i in [0]:
                 for j in [0]:
                     if myGrid.get(current_x + i, current_y + j) != minigame.team:
+                        # We need a event based architecture for god's sake
+                        if team == 1:
+                            myGrid.top_left_gun_alive = False
+                        elif team == 2:
+                            myGrid.bottom_left_gun_alive = False
+                        elif team == 3:
+                            myGrid.bottom_right_gun_alive = False
+                        elif team == 4: 
+                            myGrid.top_right_gun_alive = False
                         print("killing team {}".format(minigame.team))
                         toggle = True
                         minigame.alive = False
