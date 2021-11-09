@@ -6,7 +6,7 @@ import pygame
 from pygame.locals import *
 
 GRID_OFFSET = 300
-GRID_TOP_OFFSET = 100
+GRID_TOP_OFFSET = 0
 WINDOW_WIDTH = 800 + 2 * GRID_OFFSET
 WINDOW_HEIGHT = 800 + 2 * GRID_TOP_OFFSET
 
@@ -149,6 +149,7 @@ class Grid:
         global SCREEN
         for x in range(self.blocks):
             for y in range(self.blocks):
+                # refactor 
                 if self.grid_array[x + y * self.blocks] == 1:
                     pygame.draw.rect(SCREEN, 
                                      COLOR_RED, 
@@ -328,33 +329,38 @@ class MiniGameMarble:
         self.end_y = end_y - 15
         self.radius = 12
         self.lastscore = 0
+        self.alive = True
     
     def gravity(self):
         # introduce acceleration
-        self.move_y += 0.35
+        self.move_y += 0.15
         if self.y > self.end_y and self.move_y > 0:
-            self.move_y = 0
-            #self.move_x = 0.001
-            self.y = self.start_y
-            #self.y = self.border_y + self.height
-            thirds = self.start_x + int((self.end_x - self.start_x)/3)
-            if self.x < thirds:
-                print("self.x{} self.start_x{} self.end_x{} thirds: {} RELEASE".format(self.x, self.start_x, self.end_x, thirds))
-                self.lastscore = 1
-            elif self.x > thirds:
-                print("self.x{} self.start_x{} self.end_x{} thirds: {} MULTIPLY".format(self.x, self.start_x, self.end_x, thirds))
-                self.lastscore = 2
-            self.x = random.randrange(self.start_x, self.end_x)
+            if self.alive:  
+                self.move_y = 0
+                #self.move_x = 0.001
+                self.y = self.start_y
+                #self.y = self.border_y + self.height
+                thirds = self.start_x + int((self.end_x - self.start_x)/3)
+                if self.x < thirds:
+                    print("self.x{} self.start_x{} self.end_x{} thirds: {} RELEASE".format(self.x, self.start_x, self.end_x, thirds))
+                    self.lastscore = 1
+                elif self.x > thirds:
+                    print("self.x{} self.start_x{} self.end_x{} thirds: {} MULTIPLY".format(self.x, self.start_x, self.end_x, thirds))
+                    self.lastscore = 2
+                self.x = random.randrange(self.start_x, self.end_x)
+            else:
+                self.move_y = 0
+
         
 
         # Left border bounce off
-        if self.x-12 < self.start_x and self.move_x < 0:
+        if self.x - self.radius < self.start_x and self.move_x < 0:
             self.move_x = -self.move_x #+ 1
-            self.x = self.start_x+12
+            self.x = self.start_x + self.radius
         # Right border bounce off
-        if self.x+12 > self.end_x and self.move_x > 0:
+        if self.x + self.radius > self.end_x and self.move_x > 0:
             self.move_x = -self.move_x #+ 1
-            self.x = self.end_x-12
+            self.x = self.end_x - self.radius
         # top border bounce off 
         #if self.y < self.start_y and self.move_y > 0:
         #    self.move_y = 1
@@ -367,6 +373,8 @@ class MiniGameMarble:
 
 
     def update(self):
+        if self.alive == False:
+            self.color = (128, 128, 128)
         self.x += self.move_x
         self.y += self.move_y
         self.gravity()
@@ -407,6 +415,7 @@ class MiniGame:
         self.score = 1
         self.collect_score = 4
         self.team = team
+        self.alive = False
         
         if self.team == 1:
             self.marble_color = (255, 0, 0)
@@ -446,6 +455,7 @@ class MiniGame:
     def update(self):
         for obstacle in self.obstacles:
             obstacle.update()
+        # TODO event driven architecture
         for marble in self.marbles:
             # collect results
             if marble.lastscore == 1:
@@ -460,6 +470,8 @@ class MiniGame:
                 self.score *= 2
 
             marble.lastscore = 0
+            # The physics are broken. There is some for of Marble - Marble
+            # attraction force that I cannot possibly fathom
             # Marble - Obstacle Collision - here is where the fun begins
             for obstacle in self.obstacles:
                 max_dist = (obstacle.x - marble.x) ** 2 + (obstacle.y - marble.y) ** 2
@@ -499,7 +511,7 @@ class MiniGame:
                         angle = math.atan2(marble.y - enemy_marble.y, marble.x - enemy_marble.x)
                         cosa = math.cos(angle)
                         sina = math.sin(angle)
-                        overlap = marble.radius + (enemy_marble.radius + 1) - math.sqrt(max_dist)
+                        overlap = marble.radius + (enemy_marble.radius + 2) - math.sqrt(max_dist)
 
                         overlapX = overlap * cosa
                         overlapY = overlap * sina
@@ -521,6 +533,8 @@ class MiniGame:
                         enemy_marble.move_x = vXNew * 0.9
                         enemy_marble.move_y = vYNew * 0.9
             for marble in self.marbles:
+                if self.alive == False:
+                    marble.alive = False
                 marble.update()
 
     def draw(self):
@@ -585,12 +599,8 @@ class Bullet:
             self.color = (255, 255, 255)
 
     def draw(self):
-        # shadow effecting
+        # Shadowing effect
         global SCREEN
-        #for i in range(0, 10):
-        #    last_x -= math.cos(self.angle) * self.speed_x
-        #    last_y -= math.sin(self.angle) * self.speed_y
-
         # I hate this loop with every fiber of my being 
         i = 0
         for x, y in zip(self.last_x, self.last_y):
@@ -718,9 +728,6 @@ def main():
                                                 inverse_rot+180, 
                                                 8,
                                                 team=4))
-
-
-
 
         total_rot_speed = 2
         rot = (rot + rot_speed)  % 361
