@@ -216,9 +216,7 @@ class Grid:
             return
         self.grid_array[x + y * self.blocks] = value
 
-    def draw(self, rot):
-        self.draw_grid()
-        self.draw_lines()
+    def draw_top_left_gun(self, rot):
         pygame.draw.circle(SCREEN,
                            (255,4,4),
                            (self.offset_x + self.block_size,
@@ -233,6 +231,8 @@ class Grid:
                     0,
                     0, 
                     rot)
+
+    def draw_top_right_gun(self, rot): 
         pygame.draw.circle(SCREEN,
                            (4,4,255),
                            (self.offset_x + (self.blocks-1) * self.block_size,
@@ -246,6 +246,12 @@ class Grid:
                     0,
                     0, 
                     270+rot)
+
+    def draw(self, rot):
+        self.draw_grid()
+        self.draw_lines()
+        self.draw_top_right_gun(rot)
+        self.draw_top_left_gun(rot)
         pygame.draw.circle(SCREEN,
                            (255,255,4),
                            (self.offset_x + (self.blocks-1) * self.block_size,
@@ -415,7 +421,7 @@ class MiniGame:
         self.score = 1
         self.collect_score = 4
         self.team = team
-        self.alive = False
+        self.alive = True
         
         if self.team == 1:
             self.marble_color = (255, 0, 0)
@@ -629,7 +635,7 @@ def main():
     CLOCK = pygame.time.Clock()
 
     bullets_to_release = [0,0,0,0,0]
-    myGrid = Grid(GRID_OFFSET, GRID_TOP_OFFSET, (WINDOW_WIDTH-2*GRID_OFFSET), 80)
+    myGrid = Grid(GRID_OFFSET, GRID_TOP_OFFSET, (WINDOW_WIDTH-2*GRID_OFFSET), 20)
     rot_speed = 2
     rot = 270
     inverse_rot = 360
@@ -825,18 +831,44 @@ def main():
 
 
         for minigame in minigames:
+            print("{}", minigame.team)
+            team = minigame.team
+            current_x = 0
+            current_y = 0
+            # we must select our offset in to target the left most 
+            if team == 1:
+                current_x = 1
+                current_y = 1
+            elif team == 2:
+                current_x = 1
+                current_y = (myGrid.blocks - 2) 
+            elif team == 3:
+                current_x = (myGrid.blocks - 2)
+                current_y = (myGrid.blocks - 2)
+            elif team == 4: 
+                current_x = (myGrid.blocks - 1)
+                current_y = 1
+
+            toggle = False
+            for i in [0]:
+                for j in [0]:
+                    if myGrid.get(current_x + i, current_y + j) != minigame.team:
+                        print("killing team {}".format(minigame.team))
+                        toggle = True
+                        minigame.alive = False
+                        break
             minigame.update()
             minigame.draw()
 
         # wall bounce bullets
         for bullet in active_bullets:
-            if bullet.y-6 < myGrid.offset_y:
+            if bullet.y - (bullet.radius // 2) < myGrid.offset_y:
                 bullet.speed_y = -bullet.speed_y
-            if bullet.y+6 > myGrid.offset_y + (myGrid.block_size * myGrid.blocks):
+            if bullet.y + (bullet.radius // 2) > myGrid.offset_y + (myGrid.block_size * myGrid.blocks):
                 bullet.speed_y = -bullet.speed_y
-            if bullet.x-6 < myGrid.offset_x:
+            if bullet.x - (bullet.radius // 2) < myGrid.offset_x:
                 bullet.speed_x = -bullet.speed_x
-            if bullet.x+6 > myGrid.offset_x + (myGrid.block_size * myGrid.blocks):
+            if bullet.x + (bullet.radius // 2) > myGrid.offset_x + (myGrid.block_size * myGrid.blocks):
                 bullet.speed_x = -bullet.speed_x
 
         for bullet in active_bullets:
