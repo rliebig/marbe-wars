@@ -649,7 +649,7 @@ def main():
     CLOCK = pygame.time.Clock()
 
     bullets_to_release = [0,0,0,0,0]
-    myGrid = Grid(GRID_OFFSET, GRID_TOP_OFFSET, (WINDOW_WIDTH-2*GRID_OFFSET), 20)
+    myGrid = Grid(GRID_OFFSET, GRID_TOP_OFFSET, (WINDOW_WIDTH-2*GRID_OFFSET), 40)
     rot_speed = 2
     rot = 270
     inverse_rot = 360
