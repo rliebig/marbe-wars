@@ -4,6 +4,7 @@ from copy import deepcopy
 import math
 import pygame
 from pygame.locals import *
+from pygame import gfxdraw
 
 GRID_OFFSET = 300
 GRID_TOP_OFFSET = 0
@@ -308,10 +309,8 @@ class MiniGameObstacle:
         self.move_y = -0.4
 
     def draw(self):
-        pygame.draw.circle(SCREEN, 
-                           self.color, 
-                           (self.x, self.y), 
-                           self.radius)
+        gfxdraw.aacircle(SCREEN,  int(self.x), int(self.y), self.radius, self.color)
+        gfxdraw.filled_circle(SCREEN,  int(self.x), int(self.y), self.radius, self.color)
 
     def update(self):
         self.x += self.move_x
@@ -389,7 +388,9 @@ class MiniGameMarble:
 
     def draw(self):
         global SCREEN
-        pygame.draw.circle(SCREEN, self.color, (self.x, self.y), self.radius, width=0)
+#        pygame.draw.circle(SCREEN, self.color, (self.x, self.y), self.radius, width=0)
+        gfxdraw.aacircle(SCREEN,  int(self.x), int(self.y), self.radius, self.color)
+        gfxdraw.filled_circle(SCREEN,  int(self.x), int(self.y), self.radius, self.color)
 
 
     def update(self):
@@ -628,8 +629,10 @@ class Bullet:
             i += 1
 
 
-        pygame.draw.circle(SCREEN, self.color, (int(self.x), int(self.y)), self.radius)        
-        pygame.draw.circle(SCREEN, (0,0,0), (int(self.x), int(self.y)), self.radius, width=1)       
+#        pygame.draw.circle(SCREEN, self.color, (int(self.x), int(self.y)), self.radius)        
+#        pygame.draw.circle(SCREEN, (0,0,0), (int(self.x), int(self.y)), self.radius, width=1)       
+        gfxdraw.aacircle(SCREEN,  int(self.x), int(self.y), self.radius, self.color)
+        gfxdraw.filled_circle(SCREEN,  int(self.x), int(self.y), self.radius, self.color)
 
     def update(self):
         self.last_x += [self.x]
