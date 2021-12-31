@@ -14,4 +14,4 @@ $ python3 main.py
 ```
 
 ## Screenshot
-![screenshot](https://raw.githubusercontent.com/rliebig/marble-wars/master/screenshot.png screenshot)
+![screenshot](https://raw.githubusercontent.com/rliebig/marble-wars/master/screenshot.png "screenshot")
