@@ -12,3 +12,6 @@ $ pip install pygame
 $ cd marble-wars
 $ python3 main.py
 ```
+
+## Screenshot
+![screenshot](https://raw.githubusercontent.com/rliebig/marble-wars/master/screenshot.png screenshot)
